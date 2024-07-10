@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -b --output public",
-    "start": "node public/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q public/index.js\""
+    "start": "node index.js",
+    "dev": "nodemon -q index.js"
   },
   "keywords": [],
   "author": "",
