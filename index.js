@@ -25,37 +25,32 @@ const io = new Server(server, {
   },
 });
 
-// Define a custom interface extending the Socket interface
-class CustomSocket extends Server.Socket {
-  roomId?: string;
-}
-
 const roomCreator = new Map(); // roomid => socketid
 
-io.on('connection', (socket: CustomSocket) => {
+io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
   socket.on('createRoom', (data) => {
     const roomId = Math.random().toString(36).substring(2, 7);
     socket.join(roomId);
     const totalRoomUsers = io.sockets.adapter.rooms.get(roomId);
-    socket.emit('roomCreated', {
+    socket.emit('roomCreated', { 
       roomId,
       position: data.position,
       totalConnectedUsers: Array.from(totalRoomUsers || []),
     });
     roomCreator.set(roomId, socket.id);
-    socket.roomId = roomId; //  attach roomId to socket
+    socket.roomId = roomId; // attach roomId to socket
   });
 
-  socket.on('joinRoom', (data: { roomId: string }) => {
+  socket.on('joinRoom', (data) => {
     // check if room exists
     const roomExists = io.sockets.adapter.rooms.has(data.roomId);
     if (roomExists) {
       socket.join(data.roomId);
-      socket.roomId = data.roomId; //  attach roomId to socket
+      socket.roomId = data.roomId; // attach roomId to socket
 
-      // Notify the room creator about the new user
+      // Notify the room creator about the new user     
       const creatorSocketID = roomCreator.get(data.roomId);
       if (creatorSocketID) {
         const creatorSocket = io.sockets.sockets.get(creatorSocketID); // get socket instance of creator
@@ -63,7 +58,7 @@ io.on('connection', (socket: CustomSocket) => {
           const totalRoomUsers = io.sockets.adapter.rooms.get(data.roomId);
           creatorSocket.emit('userJoinedRoom', {
             userId: socket.id,
-            totalConnectedUsers: Array.from(totalRoomUsers || []),
+            totalConnectedUsers: Array.from(totalRoomUsers || [])
           });
         }
       }
@@ -71,17 +66,18 @@ io.on('connection', (socket: CustomSocket) => {
       io.to(`${socket.id}`).emit('roomJoined', {
         status: 'OK',
       });
+
     } else {
       io.to(`${socket.id}`).emit('roomJoined', {
-        status: 'ERROR',
+        status: 'ERROR'
       });
     }
   });
-
+  
   socket.on('updateLocation', (data) => {
     io.emit('updateLocationResponse', data);
   });
-
+ 
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
 
@@ -94,7 +90,7 @@ io.on('connection', (socket: CustomSocket) => {
         if (roomUsers) {
           for (const socketId of roomUsers) {
             io.to(`${socketId}`).emit('roomDestroyed', {
-              status: 'OK',
+              status: 'OK'
             });
           }
         }
@@ -109,7 +105,7 @@ io.on('connection', (socket: CustomSocket) => {
           if (creatorSocket) {
             creatorSocket.emit('userLeftRoom', {
               userId: socket.id,
-              totalConnectedUsers: Array.from(io.sockets.adapter.rooms.get(roomId) || []),
+              totalConnectedUsers: Array.from(io.sockets.adapter.rooms.get(roomId) || [])
             });
           }
         }
@@ -117,4 +113,3 @@ io.on('connection', (socket: CustomSocket) => {
     }
   });
 });
-
